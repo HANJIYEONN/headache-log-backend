@@ -21,13 +21,14 @@ jobs:
             APP_DIR="$HOME/headacat"
             IMG_NAME="headacat"
             CONTAINER_NAME="fastapi-app"
-            REPOSITORY_URL="https://github.com/krumichan/CatPjt-TranslaCat-ai.git"
+            REPOSITORY_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HANJIYEONN/headache-log-backend.git"
 
             if [ ! -d "$APP_DIR/.git" ]; then
               git clone "$REPOSITORY_URL" "$APP_DIR"
             fi
 
             cd "$APP_DIR"
+            git remote set-url origin "$REPOSITORY_URL"
             git pull origin main
 
             echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
