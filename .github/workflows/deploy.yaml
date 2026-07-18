@@ -12,26 +12,40 @@ jobs:
     
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 30m
+          envs: ENV_FILE_CONTENT
           script: |
+            set -e
+
             APP_DIR="$HOME/headacat"
-            IMG_NAME="headacat"
-            CONTAINER_NAME="fastapi-app"
-            REPOSITORY_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HANJIYEONN/headache-log-backend.git"
+
+            IMG_NAME="headacat-backend"
+            CONTAINER_NAME="headacat-backend"
+            REPOSITORY_URL="https://github.com/HANJIYEONN/headache-log-backend.git"
+
+            mkdir -p headacat
 
             if [ ! -d "$APP_DIR/.git" ]; then
-              git clone "$REPOSITORY_URL" "$APP_DIR"
+              git clone "$REPOSITORY_URL" "$APP_DIR"            
+            fi
+
+            if [ ! -f "$APP_DIR/Dockerfile" ]; then
+              echo "Error: backend/Dockerfile not found."
+              exit 1
             fi
 
             cd "$APP_DIR"
-            git remote set-url origin "$REPOSITORY_URL"
+
+            git fetch origin main
             git pull origin main
 
-            echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+            printf '%s' "$ENV_FILE_CONTENT" > .env
             chmod 600 .env
 
             docker build -t "$IMG_NAME" .
